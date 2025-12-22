@@ -3,12 +3,15 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// Page Imports
 import Login from "./pages/Login";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./pages/DashboardOverview";
 import AssignTask from "./pages/AssignTask";
 import AssignedTasks from "./pages/AssignedTasks";
 import Employees from "./pages/Employees";
+import Clients from "./pages/Clients"; // NEW: Import the Client Management page
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -22,16 +25,21 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Route */}
           <Route path="/" element={<Login />} />
+
+          {/* Protected Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="assign" element={<AssignTask />} />
+            <Route path="clients" element={<Clients />} /> {/* NEW: Added Client Management Route */}
             <Route path="tasks" element={<AssignedTasks />} />
             <Route path="employees" element={<Employees />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
           </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+          {/* Catch-all Route for 404s */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
