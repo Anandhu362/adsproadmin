@@ -3,17 +3,19 @@ import {
   LayoutDashboard,
   ClipboardPlus,
   ClipboardList,
-  Users,
+  Users, // Used for both Employees and Clients
   BarChart3,
   Settings,
   LogOut,
+  UserCheck, // Optional: You can use this for Employees to distinguish from Clients
 } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Assign Task", url: "/dashboard/assign", icon: ClipboardPlus },
+  { title: "Clients", url: "/dashboard/clients", icon: Users }, // Added Client Management
   { title: "Assigned Tasks", url: "/dashboard/tasks", icon: ClipboardList },
-  { title: "Employees", url: "/dashboard/employees", icon: Users },
+  { title: "Employees", url: "/dashboard/employees", icon: UserCheck }, // Changed icon to distinguish
   { title: "Reports", url: "/dashboard/reports", icon: BarChart3 },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
