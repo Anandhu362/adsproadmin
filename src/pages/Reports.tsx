@@ -22,6 +22,7 @@ import {
 import { Download, Calendar, Filter, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import XLSX from "xlsx-js-style"; 
+import { apiFetch } from "@/lib/api"; // Updated: Use centralized API utility
 
 const Reports = () => {
   const { toast } = useToast();
@@ -33,14 +34,16 @@ const Reports = () => {
 
   const fetchReports = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/reports/tasks", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
+      // Logic: Centralized apiFetch replaces raw fetch and localStorage
+      // This automatically handles the Base URL and Auth headers
+      const data = await apiFetch("/reports/tasks");
       setTasks(data);
-    } catch (error) {
-      toast({ title: "Sync Error", description: "Failed to load report data.", variant: "destructive" });
+    } catch (error: any) {
+      toast({ 
+        title: "Sync Error", 
+        description: error.message || "Failed to load report data.", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
@@ -134,7 +137,6 @@ const Reports = () => {
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto p-4">
-      {/* Search & Filter Section */}
       <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 py-4">
           <div className="flex items-center gap-3">
@@ -149,7 +151,6 @@ const Reports = () => {
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* FROM DATE - Fixed visibility with text-slate-900 */}
             <div className="space-y-2">
               <Label className="uppercase text-[11px] font-bold text-slate-600 flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5" /> From Date
@@ -162,7 +163,6 @@ const Reports = () => {
               />
             </div>
 
-            {/* TO DATE - Fixed visibility with text-slate-900 */}
             <div className="space-y-2">
               <Label className="uppercase text-[11px] font-bold text-slate-600 flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5" /> To Date
@@ -175,7 +175,6 @@ const Reports = () => {
               />
             </div>
 
-            {/* EMPLOYEE SELECT - Fixed visibility with text-slate-900 */}
             <div className="space-y-2">
               <Label className="uppercase text-[11px] font-bold text-slate-600 flex items-center gap-2">
                 <Filter className="h-3.5 w-3.5" /> Employee
@@ -203,7 +202,6 @@ const Reports = () => {
         </CardContent>
       </Card>
 
-      {/* Table Preview Section */}
       <Card className="border-slate-200 shadow-xl overflow-hidden bg-white">
         <CardHeader className="bg-white border-b border-slate-100 py-5">
           <div className="flex items-center justify-between">
