@@ -4,28 +4,24 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, CheckCircle, Clock, Loader2, Users, UserPlus } from "lucide-react";
-import EmployeeDetailsModal from "@/components/EmployeeDetailsModal"; // Separate component
+import EmployeeDetailsModal from "@/components/EmployeeDetailsModal"; 
+import { apiFetch } from "@/lib/api"; // Updated: Use centralized API utility
 
 const Employees = () => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Logic: State to manage the detailed popup card
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 1. Fetch live employee data with task stats
+  // 1. Fetch live employee data using the centralized utility
   const fetchEmployees = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/employees", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
+      // Logic: Centralized apiFetch handles the Base URL and Auth headers automatically
+      const data = await apiFetch("/employees");
       setEmployees(data);
-    } catch (error) {
-      console.error("Fetch error:", error);
+    } catch (error: any) {
+      console.error("Directory Sync Error:", error.message);
     } finally {
       setLoading(false);
     }
@@ -35,7 +31,6 @@ const Employees = () => {
     fetchEmployees();
   }, []);
 
-  // Logic: Trigger popup when a card is clicked
   const handleCardClick = (employee: any) => {
     setSelectedEmployee(employee);
     setIsModalOpen(true);
@@ -163,12 +158,11 @@ const Employees = () => {
         ))}
       </div>
 
-      {/* The Separate Popup Component */}
       <EmployeeDetailsModal 
         isOpen={isModalOpen} 
         employee={selectedEmployee} 
         onClose={() => setIsModalOpen(false)}
-        onUpdate={fetchEmployees} // Refresh data after an edit in the modal
+        onUpdate={fetchEmployees} 
       />
     </div>
   );
