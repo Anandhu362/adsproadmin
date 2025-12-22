@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardPlus, Save, Loader2 } from "lucide-react";
+import { apiFetch } from "@/lib/api"; // Updated: Use centralized API utility
 
 const workCategories = ["Flyer Design", "Poster Design", "Video Creation", "Web Development", "Branding"];
 const taskPageOptions = ["Full Page", "Half Page", "Custom Page"];
@@ -34,22 +35,22 @@ const AssignTask = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const [empRes, clientRes] = await Promise.all([
-          fetch("/api/employees", { headers: { "Authorization": `Bearer ${token}` } }),
-          fetch("/api/clients", { headers: { "Authorization": `Bearer ${token}` } })
+        // Logic: Using centralized apiFetch instead of raw fetch and localStorage
+        const [allEmployees, allClientsData] = await Promise.all([
+          apiFetch("/employees"),
+          apiFetch("/clients")
         ]);
 
-        if (!empRes.ok || !clientRes.ok) throw new Error("Connection failed");
-
-        const allEmployees = await empRes.json();
-        const allClientsData = await clientRes.json();
         const activeEmployees = allEmployees.filter((emp: any) => emp.status === "Active");
 
         setEmployees(activeEmployees);
         setAllClients(allClientsData);
-      } catch (err) {
-        toast({ title: "Sync Error", description: "Failed to load active employees.", variant: "destructive" });
+      } catch (err: any) {
+        toast({ 
+          title: "Sync Error", 
+          description: err.message || "Failed to load database data.", 
+          variant: "destructive" 
+        });
       } finally {
         setFetchingData(false);
       }
@@ -60,7 +61,6 @@ const AssignTask = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Logic: Required fields change based on category
     const isFlyer = formData.category === "Flyer Design";
     if (!formData.employeeId || !formData.category || !formData.clientName || (isFlyer && !formData.taskType)) {
       toast({ title: "Required", description: "Please fill all required fields.", variant: "destructive" });
@@ -69,33 +69,30 @@ const AssignTask = () => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/tasks", {
+      // Logic: POST request now simplified through centralized utility
+      await apiFetch("/tasks", {
         method: "POST",
-        headers: { 
-          "Authorization": `Bearer ${token}`, 
-          "Content-Type": "application/json" 
-        },
         body: JSON.stringify({
           ...formData,
-          // If not a flyer, we send an empty string or default for taskType
           taskType: isFlyer ? formData.taskType : "Standard",
           status: "Assigned" 
         }),
       });
 
-      if (res.ok) {
-        toast({ title: "Task Assigned Successfully!" });
-        setFormData({ 
-          employeeId: "", 
-          category: formData.category, 
-          clientName: "", 
-          taskType: "", 
-          customPageDetails: "" 
-        });
-      }
-    } catch (err) {
-      toast({ title: "Error", description: "Failed to assign task.", variant: "destructive" });
+      toast({ title: "Task Assigned Successfully!" });
+      setFormData({ 
+        employeeId: "", 
+        category: formData.category, 
+        clientName: "", 
+        taskType: "", 
+        customPageDetails: "" 
+      });
+    } catch (err: any) {
+      toast({ 
+        title: "Error", 
+        description: err.message || "Failed to assign task.", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
@@ -118,7 +115,6 @@ const AssignTask = () => {
         <CardContent className="pt-6 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Employee Selection */}
             <div className="space-y-2">
               <Label className="text-slate-700 font-bold">Employee Name *</Label>
               <Select value={formData.employeeId} onValueChange={(v) => setFormData({...formData, employeeId: v})}>
@@ -135,7 +131,6 @@ const AssignTask = () => {
               </Select>
             </div>
 
-            {/* Work Category */}
             <div className="space-y-2">
               <Label className="text-slate-700 font-bold">Work Category *</Label>
               <Select value={formData.category} onValueChange={(v) => setFormData({...formData, category: v, taskType: ""})}>
@@ -150,7 +145,6 @@ const AssignTask = () => {
               </Select>
             </div>
 
-            {/* Client Name */}
             <div className="space-y-2">
               <Label className="text-slate-700 font-bold">Client Name *</Label>
               <Select value={formData.clientName} onValueChange={(v) => setFormData({...formData, clientName: v})}>
@@ -165,7 +159,6 @@ const AssignTask = () => {
               </Select>
             </div>
 
-            {/* INTEGRATED UPDATION: Only show Page Type if "Flyer Design" is selected */}
             {formData.category === "Flyer Design" && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <Label className="text-slate-700 font-bold">Task Page Type *</Label>
@@ -182,7 +175,6 @@ const AssignTask = () => {
               </div>
             )}
 
-            {/* Custom Details Input - Only shows if Flyer + Custom Page is selected */}
             {formData.category === "Flyer Design" && formData.taskType === "Custom Page" && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <Label className="text-slate-700 font-bold">Page Number / Details *</Label>
