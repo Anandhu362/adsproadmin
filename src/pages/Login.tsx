@@ -85,7 +85,7 @@ const Login = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@adspro.com"
+                  placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-black/40 text-white border-white/20 focus:border-white"
