@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, Users, CheckCircle, Clock, TrendingUp, Loader2 } from "lucide-react";
+import { apiFetch } from "@/lib/api"; // Updated: Use centralized API utility
 
 // Define TypeScript interfaces for the API responses
 interface StatsData {
@@ -14,7 +15,7 @@ interface TaskData {
   _id: string;
   employeeId: { name: string } | null;
   employeeName: string;
-  taskType: string; // Updated from workType to match your Task model
+  taskType: string; 
   clientName: string;
   status: string;
 }
@@ -27,20 +28,15 @@ const DashboardOverview = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
-
-        // Parallel fetch for speed
-        const [statsRes, tasksRes] = await Promise.all([
-          fetch("/api/reports/stats", { headers }),
-          fetch("/api/tasks", { headers })
+        // Logic: No more manual fetch or localStorage
+        // Parallel fetch using the centralized apiFetch utility
+        const [statsData, tasksData] = await Promise.all([
+          apiFetch("/reports/stats"),
+          apiFetch("/tasks")
         ]);
 
-        const statsData = await statsRes.json();
-        const tasksData = await tasksRes.json();
-
         setStats(statsData);
-        setRecentTasks(tasksData.slice(0, 5)); // Show latest 5
+        setRecentTasks(tasksData.slice(0, 5)); // Show latest 5 tasks
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
       } finally {
@@ -51,7 +47,6 @@ const DashboardOverview = () => {
     fetchDashboardData();
   }, []);
 
-  // Updated Status Styles with much higher contrast
   const getStatusStyles = (status: string) => {
     switch (status) {
       case "Approved":
@@ -63,7 +58,7 @@ const DashboardOverview = () => {
       case "Correction": 
         return "bg-red-100 text-red-800 border-red-300";
       default: 
-        return "bg-blue-100 text-blue-800 border-blue-300"; // Assigned / Pending
+        return "bg-blue-100 text-blue-800 border-blue-300";
     }
   };
 
@@ -109,7 +104,6 @@ const DashboardOverview = () => {
         ))}
       </div>
 
-      {/* Recent Tasks & Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 bg-white border-slate-200 shadow-lg">
           <CardHeader className="border-b border-slate-50 pb-4">
@@ -126,9 +120,7 @@ const DashboardOverview = () => {
                       </span>
                     </div>
                     <div>
-                      <p className="text-base font-bold text-slate-900">
-                        {task.employeeId?.name || "Unassigned"}
-                      </p>
+                      <p className="text-base font-bold text-slate-900">{task.employeeId?.name || "Unassigned"}</p>
                       <p className="text-sm font-medium text-slate-500">
                         <span className="text-slate-700 font-bold">{task.clientName}</span> • {task.taskType || "Design Work"}
                       </p>
@@ -148,7 +140,6 @@ const DashboardOverview = () => {
           </CardContent>
         </Card>
 
-        {/* Dynamic Overview Column */}
         <Card className="bg-white border-slate-200 shadow-lg overflow-hidden">
           <CardHeader className="bg-slate-900 pb-6">
             <CardTitle className="text-lg font-bold text-white">Current Overview</CardTitle>
