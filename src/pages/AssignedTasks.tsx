@@ -27,10 +27,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { 
-  Search, Pencil, Trash2, Loader2, 
+  Pencil, Trash2, Loader2, 
   AlertTriangle, Edit3, RefreshCcw, CheckCircle2 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api"; // Updated: Use centralized API utility
 
 const taskPageOptions = ["Full Page", "Half Page", "Custom Page"];
 const statusWorkflow = ["Assigned", "Progress", "Correction", "Approved"];
@@ -54,12 +55,11 @@ const AssignedTasks = () => {
 
   const fetchTasks = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/tasks", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
+      // Logic: Centralized apiFetch replaces raw fetch and localStorage
+      const data = await apiFetch("/tasks");
       setTasks(data);
+    } catch (error: any) {
+      toast({ title: "Sync Error", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -67,9 +67,7 @@ const AssignedTasks = () => {
 
   useEffect(() => { fetchTasks(); }, []);
 
-  // --- Logic: Delete Task (Restricted to 'Assigned' only) ---
   const initiateDelete = (task: any) => {
-    // Extra safety check in JS logic
     if (task.status !== "Assigned") {
       toast({ 
         title: "Action Restricted", 
@@ -86,26 +84,20 @@ const AssignedTasks = () => {
     if (!taskToDelete) return;
     setIsDeleting(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/tasks/${taskToDelete}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        setTasks(tasks.filter((t) => t._id !== taskToDelete));
-        toast({ title: "Task Deleted", description: "Successfully removed from the system." });
-        setIsDeleteDialogOpen(false);
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete task.", variant: "destructive" });
+      // Logic: Centralized DELETE call
+      await apiFetch(`/tasks/${taskToDelete}`, { method: "DELETE" });
+      
+      setTasks(tasks.filter((t) => t._id !== taskToDelete));
+      toast({ title: "Task Deleted", description: "Successfully removed from the system." });
+      setIsDeleteDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to delete task.", variant: "destructive" });
     } finally {
       setIsDeleting(false);
       setTaskToDelete(null);
     }
   };
 
-  // --- Logic: Status Update ---
   const initiateStatusUpdate = (task: any) => {
     setStatusFormData({ id: task._id, status: task.status });
     setIsStatusDialogOpen(true);
@@ -114,28 +106,22 @@ const AssignedTasks = () => {
   const handleStatusUpdate = async () => {
     setIsUpdating(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/tasks/${statusFormData.id}`, {
+      // Logic: Centralized PATCH call
+      const updated = await apiFetch(`/tasks/${statusFormData.id}`, {
         method: "PATCH",
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({ status: statusFormData.status })
       });
 
-      if (res.ok) {
-        const updated = await res.json();
-        setTasks(tasks.map(t => t._id === updated._id ? updated : t));
-        toast({ title: "Status Updated" });
-        setIsStatusDialogOpen(false);
-      }
+      setTasks(tasks.map(t => t._id === updated._id ? updated : t));
+      toast({ title: "Status Updated" });
+      setIsStatusDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: "Update Failed", description: error.message, variant: "destructive" });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // --- Logic: Edit ---
   const initiateEdit = (task: any) => {
     setEditFormData({ id: task._id, taskType: task.taskType, customPageDetails: task.customPageDetails || "" });
     setIsEditDialogOpen(true);
@@ -144,21 +130,20 @@ const AssignedTasks = () => {
   const handleUpdate = async () => {
     setIsUpdating(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/tasks/${editFormData.id}`, {
+      // Logic: Centralized PATCH update for task details
+      const updated = await apiFetch(`/tasks/${editFormData.id}`, {
         method: "PATCH",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           taskType: editFormData.taskType,
           customPageDetails: editFormData.taskType === "Custom Page" ? editFormData.customPageDetails : ""
         })
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setTasks(tasks.map(t => t._id === updated._id ? updated : t));
-        toast({ title: "Task Updated" });
-        setIsEditDialogOpen(false);
-      }
+      
+      setTasks(tasks.map(t => t._id === updated._id ? updated : t));
+      toast({ title: "Task Updated" });
+      setIsEditDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: "Update Failed", description: error.message, variant: "destructive" });
     } finally { setIsUpdating(false); }
   };
 
@@ -213,8 +198,6 @@ const AssignedTasks = () => {
                       <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-slate-900 hover:bg-slate-100" onClick={() => initiateEdit(task)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      
-                      {/* UPDATED: Delete Button is now disabled if status is NOT 'Assigned' */}
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -233,7 +216,6 @@ const AssignedTasks = () => {
         </CardContent>
       </Card>
 
-      {/* --- CUSTOM DELETE POPUP (Already Integrated) --- */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="bg-white border-slate-200 sm:max-w-[400px] shadow-2xl">
           <DialogHeader>
@@ -254,7 +236,6 @@ const AssignedTasks = () => {
         </DialogContent>
       </Dialog>
 
-      {/* --- STATUS UPDATE POPUP --- */}
       <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
         <DialogContent className="bg-white border-slate-200 sm:max-w-[400px] shadow-2xl">
           <DialogHeader>
@@ -275,7 +256,6 @@ const AssignedTasks = () => {
         </DialogContent>
       </Dialog>
 
-      {/* --- EDIT POPUP --- */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="bg-white border-slate-200 sm:max-w-[450px] shadow-2xl">
           <DialogHeader>
