@@ -11,7 +11,8 @@ import DashboardOverview from "./pages/DashboardOverview";
 import AssignTask from "./pages/AssignTask";
 import AssignedTasks from "./pages/AssignedTasks";
 import Employees from "./pages/Employees";
-import Clients from "./pages/Clients"; // NEW: Import the Client Management page
+import Clients from "./pages/Clients";
+import Attendance from "./pages/Attendance"; // NEW: Import the Attendance page
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -32,7 +33,8 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="assign" element={<AssignTask />} />
-            <Route path="clients" element={<Clients />} /> {/* NEW: Added Client Management Route */}
+            <Route path="attendance" element={<Attendance />} /> {/* NEW: Added Attendance Route */}
+            <Route path="clients" element={<Clients />} />
             <Route path="tasks" element={<AssignedTasks />} />
             <Route path="employees" element={<Employees />} />
             <Route path="reports" element={<Reports />} />
