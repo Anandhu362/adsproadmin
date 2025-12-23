@@ -1,6 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
+  CalendarCheck, // NEW: Icon for Attendance
   ClipboardPlus,
   ClipboardList,
   Users,
@@ -13,6 +14,7 @@ import { authStorage } from "@/lib/auth"; // Utility to clear session
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Attendance", url: "/dashboard/attendance", icon: CalendarCheck }, // NEW: Attendance Section
   { title: "Assign Task", url: "/dashboard/assign", icon: ClipboardPlus },
   { title: "Clients", url: "/dashboard/clients", icon: Users },
   { title: "Assigned Tasks", url: "/dashboard/tasks", icon: ClipboardList },
@@ -39,7 +41,7 @@ const DashboardSidebar = () => {
   };
 
   return (
-    // FIX: Added h-screen and sticky top-0 to keep logout at bottom
+    // FIX: Maintained h-screen and sticky top-0 to keep logout at bottom
     <aside className="w-64 bg-sidebar h-screen sticky top-0 flex flex-col border-r border-sidebar-border shrink-0">
       {/* Logo Section */}
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border shrink-0">
@@ -69,7 +71,7 @@ const DashboardSidebar = () => {
         </ul>
       </nav>
 
-      {/* Fixed Logout Section */}
+      {/* Fixed Logout Section at the absolute bottom */}
       <div className="px-3 py-4 border-t border-sidebar-border mt-auto shrink-0 bg-sidebar">
         <button
           onClick={handleLogout}
