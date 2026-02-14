@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileSpreadsheet } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from "xlsx-js-style"; // CRITICAL: Use xlsx-js-style for color support
+import * as XLSX from "xlsx-js-style"; 
 
 interface Props {
   startDate?: string;
@@ -63,8 +63,20 @@ const AttendanceDownloadBtn = ({ startDate, endDate }: Props) => {
         rawData.filter((r: any) => r.date === date).forEach((r: any) => {
           const empId = r.employeeId._id;
           const entries = dailyEntriesMap.get(empId) || [];
-          if (r.checkIn) entries.push(`IN: ${formatTime(r.checkIn)}`);
-          if (r.checkOut) entries.push(`OUT: ${formatTime(r.checkOut)}`);
+          
+          if (r.checkIn) {
+            entries.push(`IN: ${formatTime(r.checkIn)}`);
+          }
+          
+          if (r.checkOut) {
+            // FIX: Append the remark if it exists
+            let outText = `OUT: ${formatTime(r.checkOut)}`;
+            if (r.remark) {
+              outText += ` - Note: ${r.remark}`;
+            }
+            entries.push(outText);
+          }
+          
           dailyEntriesMap.set(empId, entries);
         });
 
@@ -96,7 +108,7 @@ const AttendanceDownloadBtn = ({ startDate, endDate }: Props) => {
 
           const value = String(ws[address].v);
 
-          // Navy Blue Header (AdsPro Theme)
+          // Header
           if (R === 0) {
             ws[address].s = {
               font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
@@ -105,7 +117,7 @@ const AttendanceDownloadBtn = ({ startDate, endDate }: Props) => {
               border: { bottom: { style: "medium", color: { rgb: "000000" } } }
             };
           } 
-          // Light Gray Date Column Highlight
+          // Date Column
           else if (C === 0 && value !== "") {
             ws[address].s = {
               font: { bold: true, color: { rgb: "1E293B" } },
@@ -121,12 +133,12 @@ const AttendanceDownloadBtn = ({ startDate, endDate }: Props) => {
               alignment: { horizontal: "left" }
             };
           } 
-          // Red Text for Check-Out
+          // Red Text for Check-Out (Includes Remarks)
           else if (value.startsWith("OUT:")) {
             ws[address].s = {
               font: { color: { rgb: "B91C1C" }, bold: true },
               fill: { fgColor: { rgb: "FEE2E2" } },
-              alignment: { horizontal: "left" }
+              alignment: { horizontal: "left", wrapText: true } // Added wrapText for long remarks
             };
           }
         }
@@ -134,7 +146,7 @@ const AttendanceDownloadBtn = ({ startDate, endDate }: Props) => {
 
       // 4. Finalize Excel File
       const wscols = [{ wch: 18 }]; 
-      employeeNames.forEach(() => wscols.push({ wch: 25 }));
+      employeeNames.forEach(() => wscols.push({ wch: 30 })); // Increased width for remarks
       ws['!cols'] = wscols;
 
       const wb = XLSX.utils.book_new();
