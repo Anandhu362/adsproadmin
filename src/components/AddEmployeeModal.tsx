@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Save, Loader2, Mail, Phone, User } from "lucide-react";
+import { UserPlus, Save, Loader2, Mail, Phone, User, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiFetch } from "@/lib/api"; 
+import api from "@/lib/api"; // FIX: Importing the default 'api' object
 
 interface Props {
   isOpen: boolean;
@@ -20,7 +20,8 @@ const AddEmployeeModal = ({ isOpen, onClose, onSuccess }: Props) => {
     name: "",
     email: "",
     phone: "",
-    role: "Senior Designer" 
+    role: "Senior Designer",
+    password: "Password@123" // FIX: Backend requires a password to create a user
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,18 +33,29 @@ const AddEmployeeModal = ({ isOpen, onClose, onSuccess }: Props) => {
 
     setLoading(true);
     try {
-      // Logic: POST call to the backend endpoint
-      await apiFetch("/employees", {
-        method: "POST",
-        body: JSON.stringify({ ...formData, status: "Active" })
+      // FIX: Using api.post ensures headers are set correctly
+      await api.post("/employees", {
+        ...formData,
+        status: "Active"
       });
 
-      toast({ title: "Employee Added", description: `${formData.name} successfully registered.` });
-      setFormData({ name: "", email: "", phone: "", role: "Senior Designer" });
+      toast({ 
+        title: "Employee Added", 
+        description: `${formData.name} registered. Default pass: Password@123`,
+        className: "bg-green-50 border-green-200 text-green-800"
+      });
+      
+      // Reset form
+      setFormData({ name: "", email: "", phone: "", role: "Senior Designer", password: "Password@123" });
       onSuccess(); 
       onClose();   
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("Add Employee Error:", error);
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to add employee. Check server logs.", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
@@ -67,6 +79,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onSuccess }: Props) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Name Field */}
           <div className="space-y-2">
             <Label className="font-black text-slate-700 text-xs uppercase tracking-widest flex items-center gap-2">
               <User className="h-3.5 w-3.5" /> Employee Name *
@@ -78,6 +91,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onSuccess }: Props) => {
             />
           </div>
 
+          {/* Email Field */}
           <div className="space-y-2">
             <Label className="font-black text-slate-700 text-xs uppercase tracking-widest flex items-center gap-2">
               <Mail className="h-3.5 w-3.5" /> Email ID *
@@ -90,6 +104,19 @@ const AddEmployeeModal = ({ isOpen, onClose, onSuccess }: Props) => {
             />
           </div>
 
+          {/* Role Field */}
+          <div className="space-y-2">
+            <Label className="font-black text-slate-700 text-xs uppercase tracking-widest flex items-center gap-2">
+              <Briefcase className="h-3.5 w-3.5" /> Role / Position
+            </Label>
+            <Input 
+              className="h-12 border-slate-300 font-bold text-slate-900 bg-white focus:ring-slate-900" 
+              value={formData.role}
+              onChange={(e) => setFormData({...formData, role: e.target.value})}
+            />
+          </div>
+
+          {/* Phone Field */}
           <div className="space-y-2">
             <Label className="font-black text-slate-700 text-xs uppercase tracking-widest flex items-center gap-2">
               <Phone className="h-3.5 w-3.5" /> Contact Number
