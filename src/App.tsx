@@ -12,10 +12,11 @@ import AssignTask from "./pages/AssignTask";
 import AssignedTasks from "./pages/AssignedTasks";
 import Employees from "./pages/Employees";
 import Clients from "./pages/Clients";
-import Attendance from "./pages/Attendance"; // NEW: Import the Attendance page
+import Attendance from "./pages/Attendance";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import MarkAttendance from "./pages/MarkAttendance"; // NEW IMPORT
 
 const queryClient = new QueryClient();
 
@@ -26,14 +27,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public Route */}
+          {/* Public Route (Login) */}
           <Route path="/" element={<Login />} />
 
-          {/* Protected Dashboard Routes */}
+          {/* NEW: Standalone Mobile Attendance Page (No Sidebar) */}
+          <Route path="/mark-attendance" element={<MarkAttendance />} />
+
+          {/* Protected Dashboard Routes (Admin Panel) */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="assign" element={<AssignTask />} />
-            <Route path="attendance" element={<Attendance />} /> {/* NEW: Added Attendance Route */}
+            <Route path="attendance" element={<Attendance />} />
             <Route path="clients" element={<Clients />} />
             <Route path="tasks" element={<AssignedTasks />} />
             <Route path="employees" element={<Employees />} />
